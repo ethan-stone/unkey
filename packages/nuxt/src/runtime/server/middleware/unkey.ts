@@ -11,10 +11,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // TODO: refactor to SDK once it is released
-  event.context.unkey = (await $fetch("https://api.unkey.dev/v1/keys/verify", {
+  event.context.unkey = (await $fetch("https://api.unkey.dev/v1/keys.verifyKey", {
     method: "POST",
     body: { key },
-    // biome-ignore lint/suspicious/noExplicitAny: TODO:
   }).catch((e) => e.data)) as any;
   // When `useUnkey` can taken an undefined token we can safely use the belowa
   // event.context.unkey = await useUnkey().keys.verify({ key })

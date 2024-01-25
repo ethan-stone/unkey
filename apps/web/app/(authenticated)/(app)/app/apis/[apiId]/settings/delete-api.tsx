@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toaster";
 
 import { Loading } from "@/components/dashboard/loading";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,6 +30,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { revalidate } from "./actions";
+
 type Props = {
   api: {
     id: string;
@@ -41,8 +43,6 @@ type Props = {
 const intent = "delete my api";
 
 export const DeleteApi: React.FC<Props> = ({ api }) => {
-  const { toast } = useToast();
-
   const [open, setOpen] = useState(false);
 
   const formSchema = z.object({
@@ -56,21 +56,18 @@ export const DeleteApi: React.FC<Props> = ({ api }) => {
   const router = useRouter();
 
   const deleteApi = trpc.api.delete.useMutation({
-    onSuccess() {
-      toast({
-        title: "API Deleted",
-        description: "Your API and all its keys have been deleted",
+    async onSuccess() {
+      toast.message("API Deleted", {
+        description: "Your API and all its keys has been deleted.",
       });
+
+      await revalidate();
+
       router.push("/app/apis");
-      router.refresh();
     },
     onError(err) {
       console.error(err);
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "alert",
-      });
+      toast.error(err.message);
     },
   });
 
@@ -82,7 +79,7 @@ export const DeleteApi: React.FC<Props> = ({ api }) => {
 
   return (
     <>
-      <Card className="relative border-alert">
+      <Card className="relative border-2 border-[#b80f07]">
         <CardHeader>
           <CardTitle>Delete</CardTitle>
           <CardDescription>
@@ -98,7 +95,7 @@ export const DeleteApi: React.FC<Props> = ({ api }) => {
         </CardFooter>
       </Card>
       <Dialog open={open} onOpenChange={(o) => setOpen(o)}>
-        <DialogContent className="border-alert">
+        <DialogContent className="border-[#b80f07]">
           <DialogHeader>
             <DialogTitle>Delete API</DialogTitle>
             <DialogDescription>
@@ -150,7 +147,7 @@ export const DeleteApi: React.FC<Props> = ({ api }) => {
                 )}
               />
 
-              <DialogFooter className="justify-end">
+              <DialogFooter className="justify-end gap-4">
                 <Button type="button" onClick={() => setOpen(!open)} variant="secondary">
                   Cancel
                 </Button>

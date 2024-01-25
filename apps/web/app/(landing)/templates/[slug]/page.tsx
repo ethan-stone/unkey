@@ -72,12 +72,14 @@ export default async function Templates(props: Props) {
           </div>
 
           <dl className="grid grid-cols-2 gap-6 mt-10">
-            {Object.entries(tags).map(([key, value]) => (
-              <div key={key}>
-                <dt className="text-sm font-medium text-gray-900">{value}</dt>
-                <dd className="text-sm text-gray-500 ">{key}</dd>
-              </div>
-            ))}
+            {Object.entries(tags)
+              .filter(([_, value]) => !!value)
+              .map(([key, value]) => (
+                <div key={key}>
+                  <dt className="text-sm font-medium text-gray-900">{value}</dt>
+                  <dd className="text-sm text-gray-500 ">{key}</dd>
+                </div>
+              ))}
 
             <div>
               <span className="mt-1 text-sm text-gray-500">by </span>
@@ -90,7 +92,7 @@ export default async function Templates(props: Props) {
 
         <div className="w-full border-gray-100 lg:border-l lg:pl-8 lg:w-3/5">
           {template.image ? (
-            <div className="overflow-hidden bg-gray-100 rounded-lg aspect-h-1 aspect-w-1">
+            <div className="overflow-hidden bg-gray-100 rounded-lg ">
               <img
                 src={template.image}
                 alt={template.description}
@@ -117,14 +119,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // read route params
   const template = templates[params.slug];
 
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-  const ogUrl = new URL("/og/template", baseUrl);
-  ogUrl.searchParams.set("title", template?.title ?? "");
-  ogUrl.searchParams.set("author", template?.authors.join(", "));
-  ogUrl.searchParams.set("description", template?.description ?? "");
-
   return {
     title: `${template?.title} | Unkey`,
     description: template?.description,
@@ -133,20 +127,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: template?.description,
       url: `https://unkey.dev/blog/${params.slug}`,
       siteName: "unkey.dev",
-      images: [
-        {
-          url: ogUrl.toString(),
-          width: 1200,
-          height: 675,
-        },
-      ],
     },
     twitter: {
-      title: `${template?.title} | Unkey`,
       card: "summary_large_image",
+      title: `${template?.title} | Unkey`,
+      description: template?.description,
+      site: "@unkeydev",
+      creator: "@unkeydev",
     },
     icons: {
-      shortcut: "/unkey.png",
+      shortcut: "/images/landing/unkey.png",
     },
   };
 }

@@ -1,16 +1,23 @@
 "use client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "@/components/ui/toaster";
 import { useOrganization } from "@clerk/nextjs";
 import { UploadCloud } from "lucide-react";
 import Link from "next/link";
 import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 export const UpdateWorkspaceImage: React.FC = () => {
-  const { toast } = useToast();
   const { organization } = useOrganization();
 
-  const [image, setImage] = useState<string | null>(organization?.imageUrl ?? null);
+  const [image, setImage] = useState<string | null>(
+    organization?.imageUrl ?? null
+  );
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -22,19 +29,19 @@ export const UpdateWorkspaceImage: React.FC = () => {
 
   const onChangePicture = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      toast({ description: "Uploading image..." });
+      toast("Uploading image...");
       const file = e.target.files?.[0];
 
       if (!file) {
-        toast({ description: "No image selected", variant: "alert" });
+        toast.error("No image selected");
         return;
       }
       if (file.size / 1024 / 1024 > 2) {
-        toast({ description: "File size too big (max 2MB)", variant: "alert" });
+        toast.error("File size too big (max 2MB)");
         return;
       }
       if (file.type !== "image/png" && file.type !== "image/jpeg") {
-        toast({ description: "File type not supported (.png or .jpg only)", variant: "alert" });
+        toast.error("File type not supported (.png or .jpg only)");
         return;
       }
 
@@ -45,19 +52,19 @@ export const UpdateWorkspaceImage: React.FC = () => {
       reader.readAsDataURL(file);
 
       if (!organization) {
-        toast({ description: "Only allowed for orgs", variant: "alert" });
+        toast.error("Only allowed for orgs");
         return;
       }
       organization
         .setLogo({ file })
         .then(() => {
-          toast({ description: "Image uploaded" });
+          toast.success("Image uploaded");
         })
         .catch(() => {
-          toast({ description: "Error uploading image", variant: "alert" });
+          toast.error("Error uploading image");
         });
     },
-    [setImage, organization],
+    [setImage, organization]
   );
 
   if (!organization) {
@@ -69,7 +76,10 @@ export const UpdateWorkspaceImage: React.FC = () => {
         <CardContent>
           <p className="text-sm text-content-subtle">
             This is a personal workspace. Change your personal avatar{" "}
-            <Link href="/app/settings/user" className="underline hover:text-content">
+            <Link
+              href="/app/settings/user"
+              className="underline hover:text-content"
+            >
               here
             </Link>
             .
@@ -84,13 +94,13 @@ export const UpdateWorkspaceImage: React.FC = () => {
       onSubmit={async (e) => {
         e.preventDefault();
         if (!image) {
-          toast({ variant: "alert", description: "No image selected" });
+          toast.error("No image selected");
           return;
         }
 
         await organization?.setLogo({ file: image });
         await organization?.reload();
-        toast({ description: "Image uploaded" });
+        toast.success("Image uploaded");
       }}
     >
       <Card className="flex items-start justify-between">
@@ -99,7 +109,8 @@ export const UpdateWorkspaceImage: React.FC = () => {
           <CardDescription>
             Click on the avatar to upload a custom one from your files.
             <br />
-            Square image recommended. Accepted file types: .png, .jpg. Max file size: 2MB.
+            Square image recommended. Accepted file types: .png, .jpg. Max file
+            size: 2MB.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -128,13 +139,15 @@ export const UpdateWorkspaceImage: React.FC = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 setDragActive(false);
-                // biome-ignore lint/complexity/useOptionalChain: <explanation>
                 const file = e.dataTransfer.files?.[0];
                 if (file) {
                   if (file.size / 1024 / 1024 > 2) {
-                    toast({ description: "File size too big (max 2MB)" });
-                  } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
-                    toast({ description: "File type not supported (.png or .jpg only)" });
+                    toast.error("File size too big (max 2MB)");
+                  } else if (
+                    file.type !== "image/png" &&
+                    file.type !== "image/jpeg"
+                  ) {
+                    toast.error("File type not supported (.png or .jpg only)");
                   } else {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -147,9 +160,13 @@ export const UpdateWorkspaceImage: React.FC = () => {
             />
             <div
               className={`${
-                dragActive ? "cursor-copy border-2 border-black bg-gray-50 opacity-100" : ""
+                dragActive
+                  ? "cursor-copy border-2 border-black bg-gray-50 opacity-100"
+                  : ""
               } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-full bg-white transition-all ${
-                image ? "opacity-0 group-hover:opacity-100" : "group-hover:bg-gray-50"
+                image
+                  ? "opacity-0 group-hover:opacity-100"
+                  : "group-hover:bg-gray-50"
               }`}
             >
               <UploadCloud
@@ -159,7 +176,11 @@ export const UpdateWorkspaceImage: React.FC = () => {
               />
             </div>
             {image && (
-              <img src={image} alt="Preview" className="object-cover w-full h-full rounded-full" />
+              <img
+                src={image}
+                alt="Preview"
+                className="object-cover w-full h-full rounded-full"
+              />
             )}
           </label>
           <div className="flex mt-1 rounded-full shadow-sm">
@@ -175,43 +196,5 @@ export const UpdateWorkspaceImage: React.FC = () => {
         </CardContent>
       </Card>
     </form>
-    // <form
-    //   action={async (formData: FormData) => {
-    //     const res = await updateWorkspaceName(formData);
-    //     if (res.error) {
-    //       toast({
-    //         title: "Error",
-    //         description: res.error,
-    //         variant: "alert",
-    //       });
-    //       return;
-    //     }
-    //     toast({
-    //       title: "Success",
-    //       description: "Workspace name updated",
-    //     });
-
-    //     user?.reload();
-    //   }}
-    // >
-    //   <Card>
-
-    //     <CardContent>
-
-    //       <div className="flex flex-col space-y-2">
-    //         <input type="hidden" name="workspaceId" value={workspace.id} />
-    //         <Label>Name</Label>
-    //         <Input name="name" className="max-w-sm" defaultValue={workspace.name} />
-    //         <p className="text-xs text-content-subtle">What should your workspace be called?</p>
-    //       </div>
-    //     </CardContent>
-    //     <CardFooter className="justify-end">
-
-    //       <Button variant={pending ? "disabled" : "primary"} type="submit" disabled={pending}>
-    //         {pending ? <Loading /> : "Save"}
-    //       </Button>
-    //     </CardFooter>
-    //   </Card>
-    // </form>
   );
 };

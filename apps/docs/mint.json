@@ -22,13 +22,13 @@
       "url": "https://unkey.dev/discord"
     },
     {
-      "name": "GitHub",
-      "url": "https://github.com/unkeyed/unkey"
+      "name": "Dashboard",
+      "url": "https://unkey.dev/app"
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://unkey.dev/app"
+    "type": "github",
+    "url": "https://github.com/unkeyed/unkey"
   },
   "tabs": [
     {
@@ -54,11 +54,6 @@
       "name": "GitHub",
       "icon": "github",
       "url": "https://github.com/unkeyed/unkey"
-    },
-    {
-      "name": "Contributing",
-      "icon": "code-pull-request",
-      "url": "https://github.com/unkeyed/unkey/blob/main/.github/CONTRIBUTING.md"
     }
   ],
   "navigation": [
@@ -66,17 +61,15 @@
       "group": "Get Started",
       "pages": [
         "introduction",
+        "onboarding",
         {
           "group": "Quickstart",
-          "pages": [
-            "quickstart/onboarding",
-            {
-              "group": "Typescript",
-              "pages": ["quickstart/typescript/bun"]
-            }
-          ]
+          "pages": ["quickstart/nextjs", "quickstart/express", "quickstart/bun"]
         },
-        "security"
+        {
+          "group": "Security",
+          "pages": ["security/overview", "security/root-keys"]
+        }
       ]
     },
     {
@@ -85,7 +78,12 @@
         "features/ratelimiting",
         "features/temp-keys",
         "features/remaining",
-        "features/analytics"
+        "features/refill",
+        "features/analytics",
+        "features/audit-log",
+        "features/whitelist",
+        "features/revocation",
+        "features/enabled"
       ]
     },
     {
@@ -97,20 +95,20 @@
       "group": "API Documentation",
       "icon": "code",
       "pages": [
+        "api-reference/overview",
         "api-reference/authentication",
         {
           "group": "Errors",
           "pages": [
             "api-reference/errors/introduction",
             "api-reference/errors/code/BAD_REQUEST",
+            "api-reference/errors/code/UNAUTHORIZED",
             "api-reference/errors/code/FORBIDDEN",
-            "api-reference/errors/code/INTERNAL_SERVER_ERROR",
-            "api-reference/errors/code/INVALID_KEY_TYPE",
-            "api-reference/errors/code/KEY_USAGE_EXCEEDED",
             "api-reference/errors/code/NOT_FOUND",
-            "api-reference/errors/code/NOT_UNIQUE",
-            "api-reference/errors/code/RATELIMITED",
-            "api-reference/errors/code/UNAUTHORIZED"
+            "api-reference/errors/code/CONFLICT",
+            "api-reference/errors/code/DISABLED",
+            "api-reference/errors/code/TOO_MANY_REQUESTS",
+            "api-reference/errors/code/INTERNAL_SERVER_ERROR"
           ]
         },
         {
@@ -118,13 +116,20 @@
           "pages": [
             "api-reference/keys/create",
             "api-reference/keys/verify",
+            "api-reference/keys/get",
             "api-reference/keys/update",
-            "api-reference/keys/revoke"
+            "api-reference/keys/update-remaining",
+            "api-reference/keys/delete"
           ]
         },
         {
           "group": "APIs",
-          "pages": ["api-reference/apis/get", "api-reference/apis/list-keys"]
+          "pages": [
+            "api-reference/apis/create",
+            "api-reference/apis/get",
+            "api-reference/apis/list-keys",
+            "api-reference/apis/delete"
+          ]
         }
       ]
     },
@@ -142,15 +147,21 @@
                 "libraries/ts/sdk/keys/create",
                 "libraries/ts/sdk/keys/verify",
                 "libraries/ts/sdk/keys/update",
-                "libraries/ts/sdk/keys/revoke"
+                "libraries/ts/sdk/keys/delete"
               ]
             },
             {
               "group": "APIs",
-              "pages": ["libraries/ts/sdk/apis/get", "libraries/ts/sdk/apis/list-keys"]
+              "pages": [
+                "libraries/ts/sdk/apis/create",
+                "libraries/ts/sdk/apis/get",
+                "libraries/ts/sdk/apis/list-keys",
+                "libraries/ts/sdk/apis/delete"
+              ]
             }
           ]
         },
+        "libraries/ts/nextjs",
         "libraries/ts/hono"
       ]
     },
@@ -176,7 +187,8 @@
             "libraries/ex/functions/create_key",
             "libraries/ex/functions/verify_key",
             "libraries/ex/functions/revoke_key",
-            "libraries/ex/functions/update_key"
+            "libraries/ex/functions/update_key",
+            "libraries/ex/functions/update_remaining"
           ]
         }
       ]
@@ -212,13 +224,41 @@
       "pages": ["libraries/rs/overview"]
     },
     {
+      "group": "Springboot",
+      "icon": "code",
+      "pages": [
+        "libraries/springboot-java/overview",
+        "libraries/springboot-java/api/get",
+        "libraries/springboot-java/api/list",
+        "libraries/springboot-java/functions/create",
+        "libraries/springboot-java/functions/revoke",
+        "libraries/springboot-java/functions/update",
+        "libraries/springboot-java/functions/verify"
+      ]
+    },
+    {
       "group": "Contributing",
       "icon": "github",
-      "pages": ["contributing/versions"]
+      "pages": [
+        "contributing/getting-started",
+        "contributing/versions",
+        "contributing/editor-setup",
+        "contributing/testing",
+        "contributing/sdk-development"
+      ]
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/james_r_perkins",
+    "twitter": "https://twitter.com/unkeydev",
     "github": "https://github.com/unkeyed/unkey"
+  },
+  "openapi": "https://api.unkey.dev/openapi.json",
+  "api": {
+    "baseUrl": "https://api.unkey.dev"
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_kCLW6KdzuihzMqTuJ6PNC4sHP7ipArtEAF8uUH2V5Yt"
+    }
   }
 }

@@ -27,13 +27,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toaster";
+import { MembershipRole } from "@clerk/types";
 import Link from "next/link";
+
 type Member = {
   id: string;
   name: string;
   image: string;
-  role: "basic_member" | "admin" | "guest_member";
+  role: MembershipRole;
   email?: string;
 };
 
@@ -62,19 +64,24 @@ export default function TeamPage() {
   type Tab = "members" | "invitations";
   const [tab, setTab] = useState<Tab>("members");
 
-  const actions: React.ReactNode[] = [
-    <Select value={tab} onValueChange={(value: Tab) => setTab(value)}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="members">Members</SelectItem>
-          <SelectItem value="invitations">Invitations</SelectItem>
-        </SelectGroup>
-      </SelectContent>
-    </Select>,
-  ];
+  const actions: React.ReactNode[] = [];
+
+  if (isAdmin) {
+    actions.push(
+      <Select value={tab} onValueChange={(value: Tab) => setTab(value)}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value="members">Members</SelectItem>
+            <SelectItem value="invitations">Invitations</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>,
+    );
+  }
+
   if (isAdmin) {
     actions.push(<InviteButton />);
   }
@@ -97,8 +104,8 @@ const Members: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className="animate-in relative fade-in-50 flex min-h-[150px] flex-col items-center justify-center rounded-md border  p-8 text-center">
-        <div className="flex flex-col items-center justify-center mx-auto">
+      <div className="animate-in fade-in-50 relative flex min-h-[150px] flex-col items-center justify-center rounded-md border  p-8 text-center">
+        <div className="mx-auto flex flex-col items-center justify-center">
           <Loading />
         </div>
       </div>
@@ -119,14 +126,18 @@ const Members: React.FC = () => {
         {membershipList?.map(({ id, role, publicUserData }) => (
           <TableRow key={id}>
             <TableCell>
-              <div className="flex items-center flex-grow w-full gap-2">
+              <div className="flex w-full items-center gap-2 max-sm:m-0 max-sm:gap-1 max-sm:text-xs md:flex-grow">
                 <Avatar>
                   <AvatarImage src={publicUserData.imageUrl} />
                   <AvatarFallback>{publicUserData.identifier.slice(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-start">
-                  <span className="font-medium text-content">{`${publicUserData.firstName} ${publicUserData.lastName}`}</span>
-                  <span className="text-xs text-content-subtle">{publicUserData.identifier}</span>
+                  <span className="text-content font-medium">{`${
+                    publicUserData.firstName ? publicUserData.firstName : publicUserData.identifier
+                  } ${publicUserData.lastName ? publicUserData.lastName : ""}`}</span>
+                  <span className="text-content-subtle text-xs">
+                    {publicUserData.firstName ? publicUserData.identifier : ""}
+                  </span>
                 </div>
               </div>
             </TableCell>
@@ -163,12 +174,11 @@ const Invitations: React.FC = () => {
   const { isLoaded, invitationList } = useOrganization({
     invitationList: { limit: 20, offset: 0 },
   });
-  const { toast } = useToast();
 
   if (!isLoaded) {
     return (
-      <div className="animate-in relative fade-in-50 flex min-h-[150px] flex-col items-center justify-center rounded-md border  p-8 text-center">
-        <div className="flex flex-col items-center justify-center mx-auto">
+      <div className="animate-in fade-in-50 relative flex min-h-[150px] flex-col items-center justify-center rounded-md border  p-8 text-center">
+        <div className="mx-auto flex flex-col items-center justify-center">
           <Loading />
         </div>
       </div>
@@ -199,7 +209,7 @@ const Invitations: React.FC = () => {
         {invitationList?.map((invitation) => (
           <TableRow key={invitation.id}>
             <TableCell>
-              <span className="font-medium text-content">{invitation.emailAddress}</span>
+              <span className="text-content font-medium">{invitation.emailAddress}</span>
             </TableCell>
             <TableCell>
               <StatusBadge status={invitation.status} />
@@ -211,10 +221,7 @@ const Invitations: React.FC = () => {
                 size="sm"
                 onClick={async () => {
                   await invitation.revoke();
-                  toast({
-                    title: "Success",
-                    description: "Invitation revoked",
-                  });
+                  toast.success("Invitation revoked");
                 }}
               >
                 Revoke
@@ -227,11 +234,12 @@ const Invitations: React.FC = () => {
   );
 };
 
-const RoleSwitcher: React.FC<{ member: { id: string; role: Member["role"] } }> = ({ member }) => {
+const RoleSwitcher: React.FC<{
+  member: { id: string; role: Member["role"] };
+}> = ({ member }) => {
   const [role, setRole] = useState(member.role);
   const [isLoading, setLoading] = useState(false);
-  const { organization } = useOrganization();
-  const { toast } = useToast();
+  const { organization, membership } = useOrganization();
   const { userId } = useAuth();
   async function updateRole(role: Member["role"]) {
     try {
@@ -242,41 +250,42 @@ const RoleSwitcher: React.FC<{ member: { id: string; role: Member["role"] } }> =
       await organization?.updateMember({ userId: member.id, role });
 
       setRole(role);
-      toast({
-        title: "Success",
-        description: "Role updated",
-      });
+      toast.success("Role updated");
     } catch (err) {
       console.error(err);
-      toast({
-        title: "Error",
-        description: "An error occured while updating the role",
-        variant: "alert",
-      });
+      toast.error((err as Error).message);
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <Select
-      value={role}
-      disabled={member.id === userId}
-      onValueChange={async (value: Member["role"]) => {
-        updateRole(value);
-      }}
-    >
-      <SelectTrigger className="w-[180px]">
-        {isLoading ? <Loading /> : <SelectValue />}
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="basic_member">Member</SelectItem>
-        </SelectGroup>
-      </SelectContent>
-    </Select>
-  );
+  if (!membership) {
+    return null;
+  }
+
+  if (membership.role === "admin") {
+    return (
+      <Select
+        value={role}
+        disabled={member.id === userId}
+        onValueChange={async (value: Member["role"]) => {
+          updateRole(value);
+        }}
+      >
+        <SelectTrigger className="w-[180px] max-sm:w-36">
+          {isLoading ? <Loading /> : <SelectValue />}
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="basic_member">Member</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  return <span className="text-content">{role === "admin" ? "Admin" : "Member"}</span>;
 };
 
 const StatusBadge: React.FC<{ status: "pending" | "accepted" | "revoked" }> = ({ status }) => {

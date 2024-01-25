@@ -4,12 +4,14 @@ import { Area, Column } from "@ant-design/plots";
 import { useTheme } from "next-themes";
 
 const useColors = () => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   return {
-    color: theme === "dark" ? "#f1efef" : "#1c1917",
+    color: resolvedTheme === "dark" ? "#f1efef" : "#1c1917",
     palette:
-      theme === "dark" ? ["#f1efef", "#FFE41C", "#FF7568"] : ["#1c1917", "#BA7901", "#A01649"],
-    axisColor: theme === "dark" ? "#1b1918" : "#e8e5e3",
+      resolvedTheme === "dark"
+        ? ["#f1efef", "#FFE41C", "#FF7568"]
+        : ["#1c1917", "#FFCD07", "#D12542"],
+    axisColor: resolvedTheme === "dark" ? "#1b1918" : "#e8e5e3",
   };
 };
 
@@ -18,9 +20,11 @@ type Props = {
     x: string;
     y: number;
   }[];
+  timeGranularity: "hour" | "day" | "month";
+  tooltipLabel: string;
 };
 
-export const AreaChart: React.FC<Props> = ({ data }) => {
+export const AreaChart: React.FC<Props> = ({ data, timeGranularity, tooltipLabel }) => {
   const { color, axisColor } = useColors();
   return (
     <Area
@@ -31,8 +35,15 @@ export const AreaChart: React.FC<Props> = ({ data }) => {
       xField="x"
       yField="y"
       color={color}
+      areaStyle={{
+        fill: `l(270) 0:${color}00  1:${color}`,
+      }}
+      line={{
+        style: {
+          lineWidth: 1,
+        },
+      }}
       xAxis={{
-        tickCount: 3,
         tickLine: {
           style: {
             stroke: axisColor,
@@ -44,7 +55,19 @@ export const AreaChart: React.FC<Props> = ({ data }) => {
           },
         },
         label: {
-          formatter: (v: string) => new Date(v).toLocaleDateString(),
+          formatter: (v: string) => {
+            switch (timeGranularity) {
+              case "hour":
+                return new Date(v).toLocaleTimeString();
+              case "day":
+                return new Date(v).toLocaleDateString();
+              case "month":
+                return new Date(v).toLocaleDateString(undefined, {
+                  month: "long",
+                  year: "numeric",
+                });
+            }
+          },
         },
       }}
       yAxis={{
@@ -63,7 +86,7 @@ export const AreaChart: React.FC<Props> = ({ data }) => {
       }}
       tooltip={{
         formatter: (datum) => ({
-          name: "Events",
+          name: tooltipLabel,
           value: Intl.NumberFormat(undefined, { notation: "compact" }).format(Number(datum.y)),
         }),
       }}
@@ -84,7 +107,7 @@ export const ColumnChart: React.FC<Props> = ({ data }) => {
       xAxis={{
         maxTickCount: 5,
         label: {
-          formatter: (v: string) => new Date(v).toLocaleDateString(),
+          formatter: (v: string) => new Date(v).toLocaleTimeString(),
         },
         tickLine: {
           style: {
@@ -127,7 +150,8 @@ export const StackedColumnChart: React.FC<{
     x: string;
     y: number;
   }[];
-}> = ({ data }) => {
+  timeGranularity: "hour" | "day" | "month";
+}> = ({ data, timeGranularity }) => {
   const { palette, axisColor } = useColors();
   return (
     <Column
@@ -158,9 +182,20 @@ export const StackedColumnChart: React.FC<{
         },
       }}
       xAxis={{
-        maxTickCount: 5,
         label: {
-          formatter: (v: string) => new Date(v).toLocaleDateString(),
+          formatter: (v: string) => {
+            switch (timeGranularity) {
+              case "hour":
+                return new Date(v).toLocaleTimeString();
+              case "day":
+                return new Date(v).toLocaleDateString();
+              case "month":
+                return new Date(v).toLocaleDateString(undefined, {
+                  month: "long",
+                  year: "numeric",
+                });
+            }
+          },
         },
         tickLine: {
           style: {

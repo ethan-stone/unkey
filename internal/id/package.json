@@ -2,18 +2,19 @@
   "name": "@unkey/id",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc"
-  },
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "keywords": [],
   "author": "Andreas Thomas",
   "license": "ISC",
+  "scripts": {
+    "test": "vitest run -c ./vitest.config.ts"
+  },
   "devDependencies": {
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.11.5",
     "@unkey/tsconfig": "workspace:*",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^1.2.1"
   },
   "dependencies": {
     "base-x": "^4.0.0"

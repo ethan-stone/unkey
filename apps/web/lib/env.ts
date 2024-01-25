@@ -15,17 +15,16 @@ export const env = () =>
       UPSTASH_REDIS_REST_URL: z.string().optional(),
       UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
-      TINYBIRD_TOKEN: z.string(),
-
-      UNKEY_API_URL: z.string().url().default("https://api.unkey.dev"),
-      NEXT_PUBLIC_UNKEY_API_URL: z.string().url().default("https://api.unkey.dev"),
-      UNKEY_APP_AUTH_TOKEN: z.string(),
+      TINYBIRD_TOKEN: z.string().optional(),
 
       CLERK_WEBHOOK_SECRET: z.string().optional(),
-      LOOPS_API_KEY: z.string().optional(),
+      RESEND_API_KEY: z.string().optional(),
+      RESEND_AUDIENCE_ID: z.string().optional(),
 
-      UPTIME_CRON_URL_COLLECT_BILLING: z.string().optional(),
+      HEARTBEAT_UPDATE_USAGE_URL: z.string().optional(),
       PLAIN_API_KEY: z.string().optional(),
+
+      TRIGGER_API_KEY: z.string().optional(),
     })
     .parse(process.env);
 
@@ -50,11 +49,10 @@ export const vercelIntegrationEnv = () =>
 const stripeSchema = z.object({
   STRIPE_SECRET_KEY: z.string(),
   STRIPE_WEBHOOK_SECRET: z.string(),
-  STRIPE_PRO_PLAN_PRICE_ID: z.string(),
-  STRIPE_ACTIVE_KEYS_PRODUCT_ID: z.string(),
-  STRIPE_ACTIVE_KEYS_PRICE_ID: z.string(),
-  STRIPE_KEY_VERIFICATIONS_PRODUCT_ID: z.string(),
-  STRIPE_KEY_VERIFICATIONS_PRICE_ID: z.string(),
+  STRIPE_PRODUCT_ID_KEY_VERIFICATIONS: z.string(),
+  STRIPE_PRODUCT_ID_ACTIVE_KEYS: z.string(),
+  STRIPE_PRODUCT_ID_PRO_PLAN: z.string(),
+  STRIPE_PRODUCT_ID_SUPPORT: z.string(),
 });
 
 const stripeParsed = stripeSchema.safeParse(process.env);

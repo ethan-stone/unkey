@@ -1,7 +1,13 @@
 type StrArrayToUnion<TArr extends readonly string[]> = TArr[number];
 
 // sort these alphabetically
-export const frameworks = ["Django", "Next.js", "Svelte", "Express"] as const;
+export const frameworks = [
+  "Django",
+  "Next.js",
+  "Svelte",
+  "Express",
+  "Bun",
+] as const;
 export type Framework = StrArrayToUnion<typeof frameworks>;
 // id -> label
 export const languages = [
@@ -46,14 +52,26 @@ export type Template = {
 };
 
 export const templates: Record<string, Template> = {
+  "bun-koyeb": {
+    title: "Global API authentication with Unkey and Koyeb",
+    description: "Deploy and secure your API globally with Unkey and Koyeb.",
+    authors: ["chronark"],
+    repository: "https://github.com/unkeyed/examples/tree/main/bun-koyeb",
+    image: "/templates/bun_koyeb.png",
+    readmeUrl:
+      "https://raw.githubusercontent.com/unkeyed/examples/main/bun-koyeb/README.md",
+    language: "Typescript",
+    framework: "Bun",
+    url: "https://www.koyeb.com/deploy/bunkey?ref=unkey",
+  },
   "nextjs-boilderplate": {
     title: "Next.js Boilerplate",
     description:
       "A simple Next.js app using Unkey to generate and verify API keys.",
     authors: ["chronark"],
-    repository: "https://github.com/unkeyed/unkey/tree/main/examples/nextjs",
+    repository: "https://github.com/unkeyed/examples/tree/main/nextjs",
     readmeUrl:
-      "https://raw.githubusercontent.com/unkeyed/unkey/main/examples/nextjs/README.md",
+      "https://raw.githubusercontent.com/unkeyed/examples/main/nextjs/README.md",
     language: "Typescript",
     framework: "Next.js",
   },
@@ -63,9 +81,9 @@ export const templates: Record<string, Template> = {
       "A simple Next.js app using Unkey to generate and verify API keys that expire after 60 seconds.",
     authors: ["ethan-stone"],
     repository:
-      "https://github.com/unkeyed/unkey/tree/main/examples/nextjs-expiration",
+      "https://github.com/unkeyed/examples/tree/main/nextjs-expiration",
     readmeUrl:
-      "https://raw.githubusercontent.com/unkeyed/unkey/main/examples/nextjs-expiration/README.md",
+      "https://raw.githubusercontent.com/unkeyed/examples/main/nextjs-expiration/README.md",
     language: "Typescript",
     framework: "Next.js",
   },
@@ -74,19 +92,42 @@ export const templates: Record<string, Template> = {
     description: "A simple example of using the Unkey Elixir SDK.",
     authors: ["glamboyosa"],
     repository:
-      "https://github.com/unkeyed/unkey/tree/main/examples/elixir_mix_supervision_example",
+      "https://github.com/unkeyed/unkey/examples/main/elixir_mix_supervision_example",
     readmeUrl:
-      "https://raw.githubusercontent.com/unkeyed/unkey/main/examples/elixir_mix_supervision_example/README.md",
+      "https://raw.githubusercontent.com/unkeyed/examples/main/elixir_mix_supervision_example/README.md",
     language: "Elixir",
   },
-
+  "ai-billing": {
+    title: "Next.js AI application with Unkey for billing credits",
+    description:
+      "Simple AI image generation application. Contains example code of generating and refilling Unkey API keys in response to a Stripe payment link, and using the `remaining` field for measuring usage.",
+    authors: ["domeccleston"],
+    repository: "https://github.com/unkeyed/examples/tree/main/ai-billing",
+    readmeUrl:
+      "https://raw.githubusercontent.com/unkeyed/examples/main/ai-billing/README.md",
+    image: "/images/templates/ai-billing.png",
+    language: "Typescript",
+    framework: "Next.js",
+  },
+  "cli-auth": {
+    title: "CLI Auth example with Unkey",
+    description:
+      "CLI application that generates a new Unkey API key and writes it to a file.",
+    authors: ["domeccleston"],
+    repository: "https://github.com/unkeyed/examples/tree/main/unkey-cli",
+    language: "Typescript",
+    framework: "Next.js",
+    readmeUrl:
+      "https://raw.githubusercontent.com/unkeyed/examples/main/unkey-cli/README.md",
+    image: "/images/templates/unkey-cli.png",
+  },
   openstatus: {
     title: "OpenStatus.dev",
     description:
       "OpenStatus is an open source alternative to your current monitoring service with a beautiful status page.",
     authors: ["mxkaske", "thibaultleouay"],
     repository: "https://github.com/openstatusHQ/openstatus",
-    image: "/templates/openstatus.png",
+    image: "/images/templates/openstatus.png",
     readmeUrl:
       "https://raw.githubusercontent.com/openstatusHQ/openstatus/main/README.md",
     language: "Typescript",
@@ -98,7 +139,7 @@ export const templates: Record<string, Template> = {
     description:
       "A template to build type-safe full-stack serverless applications!",
     authors: ["atridadl"],
-    image: "/templates/atash.png",
+    image: "/images/templates/atash.png",
     repository: "https://github.com/atridadl/Atash",
     readmeUrl:
       "https://raw.githubusercontent.com/atridadl/Atash/main/README.md",
@@ -122,7 +163,7 @@ export const templates: Record<string, Template> = {
     description:
       "A scrum poker tool that helps agile teams plan their sprints in real-time.",
     authors: ["atridadl"],
-    image: "/templates/sprintpadawan.png",
+    image: "/images/templates/sprintpadawan.png",
     repository: "https://github.com/atridadl/sprintpadawan",
     readmeUrl:
       "https://raw.githubusercontent.com/atridadl/sprintpadawan/main/README.md",
@@ -152,5 +193,17 @@ export const templates: Record<string, Template> = {
     language: "Typescript",
     url: "https://unkey.dev/blog/ocr-service",
     framework: "Express",
+  },
+  yoga: {
+    title: "Protect GraphQL APIs with Unkey",
+    description: "GraphQL Yoga Plugin system to protect your API",
+    authors: ["notrab"],
+    repository:
+      "https://github.com/graphqlwtf/91-protect-graphql-apis-with-unkey",
+    image: "/images/templates/graphql-yoga.png",
+    readmeUrl:
+      "https://raw.githubusercontent.com/graphqlwtf/91-protect-graphql-apis-with-unkey/main/README.md",
+    language: "Typescript",
+    url: "https://graphql.wtf/episodes/91-protect-graphql-apis-with-unkey",
   },
 };

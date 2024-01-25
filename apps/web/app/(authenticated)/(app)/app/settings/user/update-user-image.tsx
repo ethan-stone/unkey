@@ -1,13 +1,18 @@
 "use client";
 import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "@/components/ui/toaster";
 import { useUser } from "@clerk/nextjs";
 import { UploadCloud } from "lucide-react";
 
 export const UpdateUserImage: React.FC = () => {
-  const { toast } = useToast();
   const { user } = useUser();
 
   const [image, setImage] = useState<string | null>(user?.imageUrl ?? null);
@@ -22,19 +27,19 @@ export const UpdateUserImage: React.FC = () => {
 
   const onChangePicture = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      toast({ description: "Uploading image..." });
+      toast("Uploading image...");
       const file = e.target.files?.[0];
 
       if (!file) {
-        toast({ description: "No image selected", variant: "alert" });
+        toast.error("No image selected");
         return;
       }
       if (file.size / 1024 / 1024 > 2) {
-        toast({ description: "File size too big (max 2MB)" });
+        toast.error("File size too big (max 2MB)");
         return;
       }
       if (file.type !== "image/png" && file.type !== "image/jpeg") {
-        toast({ description: "File type not supported (.png or .jpg only)" });
+        toast.error("File type not supported (.png or .jpg only)");
         return;
       }
 
@@ -45,19 +50,19 @@ export const UpdateUserImage: React.FC = () => {
       reader.readAsDataURL(file);
 
       if (!user) {
-        toast({ description: "Only allowed for orgs", variant: "alert" });
+        toast.error("Only allowed for orgs");
         return;
       }
       user
         .setProfileImage({ file })
         .then(() => {
-          toast({ description: "Image uploaded" });
+          toast.success("Image uploaded");
         })
         .catch(() => {
-          toast({ description: "Error uploading image", variant: "alert" });
+          toast.error("Error uploading image");
         });
     },
-    [setImage, user],
+    [setImage, user]
   );
 
   return (
@@ -65,13 +70,13 @@ export const UpdateUserImage: React.FC = () => {
       onSubmit={async (e) => {
         e.preventDefault();
         if (!image) {
-          toast({ variant: "alert", description: "No image selected" });
+          toast.error("No image selected");
           return;
         }
 
         await user?.setProfileImage({ file: image });
         await user?.reload();
-        toast({ description: "Image uploaded" });
+        toast.success("Image uploaded");
       }}
     >
       <Card className="flex items-start justify-between">
@@ -80,7 +85,8 @@ export const UpdateUserImage: React.FC = () => {
           <CardDescription>
             Click on the avatar to upload a custom one from your files.
             <br />
-            Square image recommended. Accepted file types: .png, .jpg. Max file size: 2MB.
+            Square image recommended. Accepted file types: .png, .jpg. Max file
+            size: 2MB.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,13 +115,15 @@ export const UpdateUserImage: React.FC = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 setDragActive(false);
-                // biome-ignore lint/complexity/useOptionalChain: <explanation>
                 const file = e.dataTransfer.files?.[0];
                 if (file) {
                   if (file.size / 1024 / 1024 > 2) {
-                    toast({ description: "File size too big (max 2MB)" });
-                  } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
-                    toast({ description: "File type not supported (.png or .jpg only)" });
+                    toast.error("File size too big (max 2MB)");
+                  } else if (
+                    file.type !== "image/png" &&
+                    file.type !== "image/jpeg"
+                  ) {
+                    toast.error("File type not supported (.png or .jpg only)");
                   } else {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -128,9 +136,13 @@ export const UpdateUserImage: React.FC = () => {
             />
             <div
               className={`${
-                dragActive ? "cursor-copy border-2 border-black bg-gray-50 opacity-100" : ""
+                dragActive
+                  ? "cursor-copy border-2 border-black bg-gray-50 opacity-100"
+                  : ""
               } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-full bg-white transition-all ${
-                image ? "opacity-0 group-hover:opacity-100" : "group-hover:bg-gray-50"
+                image
+                  ? "opacity-0 group-hover:opacity-100"
+                  : "group-hover:bg-gray-50"
               }`}
             >
               <UploadCloud
@@ -140,7 +152,11 @@ export const UpdateUserImage: React.FC = () => {
               />
             </div>
             {image && (
-              <img src={image} alt="Preview" className="object-cover w-full h-full rounded-full" />
+              <img
+                src={image}
+                alt="Preview"
+                className="object-cover w-full h-full rounded-full"
+              />
             )}
           </label>
           <div className="flex mt-1 rounded-full shadow-sm">

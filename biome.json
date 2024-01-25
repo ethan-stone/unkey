@@ -1,6 +1,5 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.0.0/schema.json",
-
   "linter": {
     "enabled": true,
     "rules": {
@@ -20,15 +19,36 @@
       },
       "performance": {
         "noDelete": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
       }
     },
-    "ignore": ["node_modules", ".next", "dist", ".nuxt", ".contentlayer"]
+    "ignore": [
+      ".vitest",
+      "node_modules",
+      ".next",
+      "dist",
+      ".nuxt",
+      ".contentlayer",
+      "./packages/api/src/openapi.d.ts",
+      ".wrangler",
+      ".react-email"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
     "indentSize": 2,
     "enabled": true,
     "lineWidth": 100,
-    "ignore": ["node_modules", ".next", "dist", ".nuxt", ".contentlayer"]
+    "ignore": [
+      "node_modules",
+      ".next",
+      "dist",
+      ".nuxt",
+      ".contentlayer",
+      ".wrangler",
+      ".react-email"
+    ]
   }
 }

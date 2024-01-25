@@ -9,11 +9,15 @@ export const db = drizzle(
     host: dbEnv().DATABASE_HOST,
     username: dbEnv().DATABASE_USERNAME,
     password: dbEnv().DATABASE_PASSWORD,
-    // biome-ignore lint/suspicious/noExplicitAny: TODO
+
     fetch: (url: string, init: any) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TODO
       (init as any).cache = undefined; // Remove cache header
-      return fetch(url, init);
+      const u = new URL(url);
+      // set protocol to http if localhost for CI testing
+      if (u.host.includes("localhost")) {
+        u.protocol = "http";
+      }
+      return fetch(u, init);
     },
   }),
   {
@@ -22,4 +26,3 @@ export const db = drizzle(
 );
 
 export * from "@unkey/db";
-export * from "drizzle-orm";

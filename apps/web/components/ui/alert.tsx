@@ -4,13 +4,13 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&:has(svg)]:pl-11 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-lg border p-4 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
         default: "bg-background text-content",
-        alert: "border-alert bg-alert/5 text-alert",
-        warn: "border-warn bg-warn/5 text-warn",
+        alert: " border-alert bg-alert/5 text-content-alert",
+        warn: " border-warn bg-warn/5 text-content-warn",
       },
     },
     defaultVariants: {
@@ -29,7 +29,7 @@ Alert.displayName = "Alert";
 
 const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h5
+    <h3
       ref={ref}
       className={cn("mb-1 font-medium leading-none tracking-tight ", className)}
       {...props}

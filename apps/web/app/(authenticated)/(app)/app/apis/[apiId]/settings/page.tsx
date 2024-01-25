@@ -7,7 +7,8 @@ import { notFound, redirect } from "next/navigation";
 import { DeleteApi } from "./delete-api";
 import { UpdateApiName } from "./update-api-name";
 import { UpdateIpWhitelist } from "./update-ip-whitelist";
-export const revalidate = 0;
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: {
@@ -19,7 +20,8 @@ export default async function SettingsPage(props: Props) {
   const tenantId = getTenantId();
 
   const workspace = await db.query.workspaces.findFirst({
-    where: eq(schema.workspaces.tenantId, tenantId),
+    where: (table, { and, eq, isNull }) =>
+      and(eq(table.tenantId, tenantId), isNull(table.deletedAt)),
     with: {
       apis: {
         where: eq(schema.apis.id, props.params.apiId),
@@ -27,7 +29,7 @@ export default async function SettingsPage(props: Props) {
     },
   });
   if (!workspace || workspace.tenantId !== tenantId) {
-    return redirect("/onboarding");
+    return redirect("/new");
   }
   const api = workspace.apis.find((api) => api.id === props.params.apiId);
   if (!api) {

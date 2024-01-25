@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toaster";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -24,31 +24,23 @@ type Props = {
 };
 
 export const DeleteKey: React.FC<Props> = ({ apiKey }) => {
-  const { toast } = useToast();
-
-  const [open, setOpen] = useState(false);
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const deleteKey = trpc.key.delete.useMutation({
     onSuccess() {
-      toast({
-        title: "Success",
-        description: "Key deleted",
-      });
+      toast.success("Key deleted");
       router.push("/app");
     },
     onError(error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "alert",
-      });
+      console.error(error);
+      toast.error(error.message);
     },
   });
 
   return (
     <>
-      <Card className="relative border-alert">
+      <Card className="relative border-[#b80f07]">
         <CardHeader>
           <CardTitle>Delete</CardTitle>
           <CardDescription>This key will be deleted. This action cannot be undone.</CardDescription>
@@ -62,7 +54,7 @@ export const DeleteKey: React.FC<Props> = ({ apiKey }) => {
       </Card>
 
       <Dialog open={open} onOpenChange={(o) => setOpen(o)}>
-        <DialogContent className="border-alert">
+        <DialogContent className="border-[#b80f07]">
           <DialogHeader>
             <DialogTitle>Delete Key</DialogTitle>
             <DialogDescription>

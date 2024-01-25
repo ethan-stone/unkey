@@ -5,9 +5,10 @@ import rehypeCodeTitles from "rehype-code-titles";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import { authors } from "./content/blog/authors";
 
 const options = {
-  theme: "github-light",
+  theme: "light-plus",
   defaultLang: {
     block: "typescript",
   },
@@ -30,14 +31,20 @@ const Post = defineDocumentType(() => ({
       required: true,
     },
     author: {
-      type: "json",
-      description: "The author of the post",
+      type: "enum",
+      options: Object.keys(authors),
+      description: "The author id of the post",
       required: true,
     },
     description: {
       type: "string",
       description: "The excerpt of the post",
       required: true,
+    },
+    image: {
+      type: "string",
+      description: "Image of the post",
+      required: false,
     },
   },
   computedFields: {
@@ -89,6 +96,7 @@ const Changelog = defineDocumentType(() => ({
     summary: {
       type: "list",
       of: { type: "string" },
+      required: false,
     },
     changes: {
       type: "number",
@@ -107,6 +115,50 @@ const Changelog = defineDocumentType(() => ({
       resolve: (doc) => `/changelog/${doc._raw.sourceFileName.replace(".mdx", "")}`,
     },
     date: {
+      type: "string",
+      resolve: (doc) => doc._raw.sourceFileName.replace(".mdx", ""),
+    },
+  },
+}));
+
+const Job = defineDocumentType(() => ({
+  name: "Job",
+  filePathPattern: "jobs/*.mdx",
+  contentType: "mdx",
+  type: "Job",
+  fields: {
+    title: {
+      type: "string",
+      description: "The title of the job",
+      required: true,
+    },
+    visible: {
+      type: "boolean",
+      description: "Whether or not the job is visible on the website",
+      required: true,
+    },
+    description: {
+      type: "string",
+      description: "The excerpt of the job",
+      required: true,
+    },
+    level: {
+      type: "string",
+      description: "The level of the job",
+      required: false,
+    },
+    salary: {
+      type: "string",
+      description: "The salary band of the job",
+      required: true,
+    },
+  },
+  computedFields: {
+    url: {
+      type: "string",
+      resolve: (doc) => `/careers/${doc._raw.sourceFileName.replace(".mdx", "")}`,
+    },
+    slug: {
       type: "string",
       resolve: (doc) => doc._raw.sourceFileName.replace(".mdx", ""),
     },
@@ -135,7 +187,7 @@ const Policies = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: "content",
-  documentTypes: [Changelog, Policies, Post],
+  documentTypes: [Changelog, Policies, Post, Job],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [

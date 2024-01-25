@@ -1,2 +1,4 @@
 export * from "./types";
-export * as schema from "./schema";
+import * as schema from "./schema";
+export { schema };
+export * from "drizzle-orm";

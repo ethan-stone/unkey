@@ -5,13 +5,13 @@ import { getTenantId } from "@/lib/auth";
 import { and, db, eq, isNull, schema } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { DeleteKey } from "./delete-key";
+import { UpdateKeyEnabled } from "./update-key-enabled";
 import { UpdateKeyExpiration } from "./update-key-expiration";
 import { UpdateKeyMetadata } from "./update-key-metadata";
 import { UpdateKeyName } from "./update-key-name";
 import { UpdateKeyOwnerId } from "./update-key-owner-id";
 import { UpdateKeyRatelimit } from "./update-key-ratelimit";
 import { UpdateKeyRemaining } from "./update-key-remaining";
-export const revalidate = 0;
 
 type Props = {
   params: {
@@ -34,21 +34,21 @@ export default async function SettingsPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8 mb-20 ">
+    <div className="mb-20 flex flex-col gap-8 ">
+      <UpdateKeyEnabled apiKey={key} />
       <UpdateKeyRemaining apiKey={key} />
       <UpdateKeyRatelimit apiKey={key} />
       <UpdateKeyExpiration apiKey={key} />
       <UpdateKeyMetadata apiKey={key} />
       <UpdateKeyName apiKey={key} />
       <UpdateKeyOwnerId apiKey={key} />
-
       <Card>
         <CardHeader>
           <CardTitle>Key ID</CardTitle>
           <CardDescription>This is your key id. It's used in some API calls.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Code className="flex items-center justify-between w-full h-8 max-w-sm gap-4">
+          <Code className="flex h-8 w-full max-w-sm items-center justify-between gap-4">
             <pre>{key.id}</pre>
             <div className="flex items-start justify-between gap-4">
               <CopyButton value={key.id} />

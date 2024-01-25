@@ -8,24 +8,24 @@ If you prefer a typed experience over calling http endpoints directly, you can u
 ## Install
 
 <Tabs>
-<Tab title="bun">
+  <Tab title="npm">
   ```bash
-   bun install @unkey/api 
+   npm install @unkey/api
   ```
   </Tab>
   <Tab title="pnpm">
   ```bash
-   pnpm add @unkey/api 
+   pnpm add @unkey/api
   ```
   </Tab>
   <Tab title="yarn">
   ```bash
-   yarn add @unkey/api 
+   yarn add @unkey/api
   ```
   </Tab>
-  <Tab title="npm">
+    <Tab title="bun">
   ```bash
-   npm install @unkey/api 
+   bun install @unkey/api
   ```
   </Tab>
 </Tabs>
@@ -99,4 +99,81 @@ if (!result.valid) {
 
 // process request
 console.log(result);
+```
+
+
+## Options
+
+The constructor accepts some options to customize the behavior:
+
+
+### Base Url
+
+Run all requests agaisnt your own instance of unkey hosted on your own infrastructure.
+
+<ParamField body="baseUrl" type="string" default="https://api.unkey.dev">
+  The age of the user. Cannot be less than 0
+</ParamField>
+```ts
+const unkey = new Unkey({
+  //...
+  baseUrl: "https://my.domain"
+})
+```
+
+### Retries
+
+By default the client will retry on network errors, you can customize this behavior:
+
+
+<ParamField body="retry">
+  <Expandable defaultOpen>
+    <ParamField body="attempts" type="integer">
+      How often to retry
+    </ParamField>
+    <ParamField body="backoff" type="(retryCount: number) => number">
+      A function that returns how many milliseconds to wait until the next attempt is made.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+```ts
+const unkey = new Unkey({
+  // ...
+  retry: {
+    attempts: 3,
+    backoff: (retryCount) => retryCount * 1000
+  }
+})
+```
+
+### Cache
+
+Configure the `fetch` cache behavior.
+
+<Warning>
+As of October 2023, the `cache` option is not yet implemented in cloudflare workers and will throw an error if used.
+</Warning>
+
+<ParamField body="cache" type="string">
+  Available options are: `default`, `force-cache`, `no-cache`, `no-store`, `only-if-cached` or `reload`.
+ </ParamField>
+
+```ts
+const unkey = new Unkey({
+  // ...
+  cache: "no-cache"
+})
+```
+
+### Disable telemetry
+
+By default, Unkey collects anonymous telemetry data to help us understand which versions of our SDK is being used, and in which environment.
+
+If you wish to disable this, you can do so by passing a boolean flag to the constructor:
+
+```ts
+const unkey = new Unkey({
+  disableTelemetry: true
+})
 ```

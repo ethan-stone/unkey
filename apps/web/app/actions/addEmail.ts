@@ -1,14 +1,23 @@
 "use server";
-export async function addEmail(formData: FormData) {
-  const email = formData.get("email");
 
-  const res = await fetch("https://app.loops.so/api/newsletter-form/clk4gj1jq00myl70o5gv88fnf", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: email }),
+import { env } from "@/lib/env";
+import { Resend } from "resend";
+export async function addEmail(formData: FormData) {
+  const { RESEND_API_KEY, RESEND_AUDIENCE_ID } = env();
+  if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
+    return { success: false };
+  }
+
+  const email = formData.get("email")?.toString();
+  if (!email) {
+    return { success: false };
+  }
+  const resend = new Resend(RESEND_API_KEY);
+
+  await resend.contacts.create({
+    audience_id: RESEND_AUDIENCE_ID,
+    email: email,
   });
-  const json = await res.json();
-  return json;
+
+  return { success: true };
 }

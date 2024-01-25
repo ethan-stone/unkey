@@ -17,9 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const changelog = allChangelogs.find(
     (c) => new Date(c.date).toISOString().split("T")[0] === params.date,
   );
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
 
   return {
     title: `${changelog?.title} | Unkey`,
@@ -27,22 +24,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${changelog?.title} | Unkey`,
       description: changelog?.description,
-      url: `${baseUrl}/changelog/${changelog?.url}`,
+      url: `https://unkey.dev/changelog/${changelog?.url}`,
       siteName: "unkey.dev",
-      images: [
-        {
-          url: `${baseUrl}/og/changelog?title=${changelog?.title}&date=${changelog?.date}`,
-          width: 1200,
-          height: 675,
-        },
-      ],
     },
     twitter: {
-      title: `${changelog?.title} | Unkey`,
       card: "summary_large_image",
+      title: `${changelog?.title} | Unkey`,
+      description: changelog?.description,
+      site: "@unkeydev",
+      creator: "@unkeydev",
     },
     icons: {
-      shortcut: "/unkey.png",
+      shortcut: "/images/landing/unkey.png",
     },
   };
 }
@@ -80,7 +73,7 @@ export default async function ChangeLogLayout({
 
         <Container className="mt-24 sm:mt-32 lg:mt-40">
           <FadeIn>
-            <div className="max-w-5xl mx-auto prose lg:prose-md">
+            <div className="prose lg:prose-md mx-auto max-w-5xl">
               <Content />
             </div>
           </FadeIn>

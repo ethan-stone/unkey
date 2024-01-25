@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ClerkProvider, auth } from "@clerk/nextjs";
-import * as Sentry from "@sentry/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+
+export const dynamic = "force-dynamic";
+
 export default function AuthenticatedLayout({
   children,
 }: {
@@ -12,7 +14,7 @@ export default function AuthenticatedLayout({
       <TooltipProvider>
         <ClerkProvider
           afterSignInUrl="/app"
-          afterSignUpUrl="/onboarding"
+          afterSignUpUrl="/new"
           appearance={{
             variables: {
               colorPrimary: "#5C36A3",
@@ -20,7 +22,6 @@ export default function AuthenticatedLayout({
             },
           }}
         >
-          <SetUserInSentry />
           {children}
         </ClerkProvider>
       </TooltipProvider>
@@ -28,15 +29,3 @@ export default function AuthenticatedLayout({
     </>
   );
 }
-
-const SetUserInSentry: React.FC = () => {
-  const { userId } = auth();
-  if (!userId) {
-    Sentry.setUser(null);
-  } else {
-    Sentry.setUser({
-      id: userId,
-    });
-  }
-  return null;
-};

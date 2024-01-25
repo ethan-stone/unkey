@@ -1,9 +1,10 @@
 import { env } from "@/lib/env";
-import { Tinybird } from "@chronark/zod-bird";
+import { NoopTinybird, Tinybird } from "@chronark/zod-bird";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-const tb = new Tinybird({ token: env().TINYBIRD_TOKEN });
+const token = env().TINYBIRD_TOKEN;
+const tb = token ? new Tinybird({ token }) : new NoopTinybird();
 
 export const ingestPageView = tb.buildIngestEndpoint({
   datasource: "pageviews__v1",
@@ -31,7 +32,7 @@ export async function collectPageViewAnalytics(args: {
   tenantId?: string;
 }): Promise<void> {
   try {
-    const host = new URL(args.req.nextUrl).host;
+    const host = args.req.nextUrl.host;
     if (host.startsWith("localhost") || host.startsWith("127.0.0.1")) {
       // console.debug(`not collecting analytics for ${host}`);
       return;

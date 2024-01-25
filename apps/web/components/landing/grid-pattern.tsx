@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
-
-// biome-ignore lint/suspicious/noExplicitAny: it's tailwindui's code
 function Block({ x, y, ...props }: any) {
   return (
     <motion.path
@@ -75,10 +73,8 @@ export function GridPattern({ yOffset = 0, interactive = false, ...props }) {
 
   return (
     <svg ref={ref} aria-hidden="true" {...props}>
-      <title>idk tailwind stuff</title>
       <rect width="100%" height="100%" fill={`url(#${id})`} strokeWidth="0" />
       <svg x="50%" y={yOffset} strokeWidth="0" className="overflow-visible">
-        <title>tailwind stuff</title>
         {staticBlocks.map((block) => (
           <Block key={`${block}`} x={block[0]} y={block[1]} />
         ))}

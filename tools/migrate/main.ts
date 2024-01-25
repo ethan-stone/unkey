@@ -1,70 +1,43 @@
-import { randomBytes } from "node:crypto";
 import { schema } from "@unkey/db";
-import baseX from "base-x";
 
-import { eq, isNull } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
-const prefixes = {
-  key: "key",
-  policy: "pol",
-  api: "api",
-  request: "req",
-  workspace: "ws",
-  keyAuth: "key_auth",
-} as const;
-
-export function newId(prefix: keyof typeof prefixes): string {
-  const buf = randomBytes(16);
-  return [
-    prefixes[prefix],
-    baseX("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz").encode(buf),
-  ].join("_");
-}
+import { connect } from "@planetscale/database";
+import { newId } from "@unkey/id";
+import { drizzle } from "drizzle-orm/planetscale-serverless";
 
 async function main() {
+  console.log("RUNNING");
   const db = drizzle(
-    await mysql.createConnection({
+    connect({
       host: process.env.DATABASE_HOST,
-      user: process.env.DATABASE_USERNAME,
+      username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
     }),
-    { schema },
+    {
+      schema,
+    },
   );
-  const keys = await db.query.keys.findMany({ where: isNull(schema.keys.keyAuthId) });
+  console.log("X");
+  const oldRoles = await db.query.roles.findMany({
+    with: { key: true },
+  });
   let i = 0;
-  for (const key of keys) {
+  for (const oldRole of oldRoles) {
     console.log("");
-    console.log(++i, "/", keys.length);
-    console.table(key);
+    console.log(++i, "/", oldRoles.length, oldRole.id);
 
-    const api = await db.query.apis.findFirst({ where: eq(schema.apis.id, key.apiId) });
-    if (!api) {
-      console.error("api doesn't exist", key);
-      continue;
-    }
-    if (!api.keyAuthId) {
-      console.error("api doesn't have keyAuth", key);
-      continue;
-    }
-
-    console.log("updating key %s with %s", key.id, api.keyAuthId);
-    await db
-      .update(schema.keys)
-      .set({ keyAuthId: api.keyAuthId })
-      .where(eq(schema.keys.id, key.id));
-
-    // const keyAuthId = newId("keyAuth");
-    // await db.insert(schema.keyAuth).values({
-    //   id: keyAuthId,
-    //   workspaceId: api.workspaceId,
-    // });
-    // await db
-    //   .update(schema.apis)
-    //   .set({ keyAuthId, authType: "key" })
-    //   .where(eq(schema.apis.id, api.id));
-
-    // await db.update(schema.keys).set({ keyAuthId }).where(eq(schema.keys.apiId, api.id));
+    await db.transaction(async (tx) => {
+      const permissionId = newId("permission");
+      await tx.insert(schema.permissions).values({
+        id: permissionId,
+        name: oldRole.role,
+        workspaceId: oldRole.workspaceId,
+      });
+      await tx.insert(schema.keysPermissions).values({
+        keyId: oldRole.key.id,
+        permissionId,
+        workspaceId: oldRole.workspaceId,
+      });
+    });
   }
 }
 
