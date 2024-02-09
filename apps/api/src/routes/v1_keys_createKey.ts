@@ -8,7 +8,7 @@ import { schema } from "@unkey/db";
 import { sha256 } from "@unkey/hash";
 import { newId } from "@unkey/id";
 import { KeyV1 } from "@unkey/keys";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery } from "@unkey/rbac";
 
 const route = createRoute({
   method: "post",
@@ -179,10 +179,10 @@ When validating a key, we will return this back to you, so you can clearly ident
 
 export type Route = typeof route;
 export type V1KeysCreateKeyRequest = z.infer<
-  typeof route.request.body.content["application/json"]["schema"]
+  (typeof route.request.body.content)["application/json"]["schema"]
 >;
 export type V1KeysCreateKeyResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 
 export const registerV1KeysCreateKey = (app: App) =>
@@ -190,7 +190,7 @@ export const registerV1KeysCreateKey = (app: App) =>
     const req = c.req.valid("json");
     const auth = await rootKeyAuth(
       c,
-      buildQuery(({ or }) => or("*", "api.*.create_key", `api.${req.apiId}.create_key`)),
+      buildUnkeyQuery(({ or }) => or("*", "api.*.create_key", `api.${req.apiId}.create_key`)),
     );
 
     const api = await cache.withCache(c, "apiById", req.apiId, async () => {
@@ -267,17 +267,10 @@ export const registerV1KeysCreateKey = (app: App) =>
         enabled: req.enabled,
       });
       if (req.roles && req.roles.length > 0) {
-        await tx.insert(schema.roles).values(
-          req.roles.map((role) => ({
-            id: newId("role"),
-            workspaceId: authorizedWorkspaceId,
-            keyId,
-            role,
-          })),
-        );
         const permissions = req.roles.map((name) => ({
           id: newId("permission"),
           name,
+          key: name,
           workspaceId: authorizedWorkspaceId,
         }));
 

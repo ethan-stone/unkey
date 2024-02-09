@@ -6,7 +6,7 @@ import { schema } from "@unkey/db";
 import { rootKeyAuth } from "@/pkg/auth/root_key";
 import { UnkeyApiError, openApiErrorResponses } from "@/pkg/errors";
 import { newId } from "@unkey/id";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery } from "@unkey/rbac";
 import { eq } from "drizzle-orm";
 
 const route = createRoute({
@@ -28,7 +28,7 @@ const route = createRoute({
 
 export type Route = typeof route;
 export type LegacyKeysDeleteKeyResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 
 export const registerLegacyKeysDelete = (app: App) =>
@@ -39,6 +39,11 @@ export const registerLegacyKeysDelete = (app: App) =>
       const dbRes = await db.query.keys.findFirst({
         where: (table, { eq, and, isNull }) => and(eq(table.id, keyId), isNull(table.deletedAt)),
         with: {
+          permissions: {
+            with: {
+              permission: true,
+            },
+          },
           keyAuth: {
             with: {
               api: true,
@@ -54,6 +59,7 @@ export const registerLegacyKeysDelete = (app: App) =>
       return {
         key: dbRes,
         api: dbRes.keyAuth.api,
+        permissions: dbRes.permissions.map((p) => p.permission.key!).filter(Boolean),
       };
     });
 
@@ -63,7 +69,7 @@ export const registerLegacyKeysDelete = (app: App) =>
 
     const auth = await rootKeyAuth(
       c,
-      buildQuery(({ or }) => or("*", "api.*.delete_key", `api.${data.api.id}.delete_key`)),
+      buildUnkeyQuery(({ or }) => or("*", "api.*.delete_key", `api.${data.api.id}.delete_key`)),
     );
 
     if (data.key.workspaceId !== auth.authorizedWorkspaceId) {

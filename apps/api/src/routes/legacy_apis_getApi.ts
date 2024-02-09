@@ -4,17 +4,20 @@ import { createRoute, z } from "@hono/zod-openapi";
 
 import { rootKeyAuth } from "@/pkg/auth/root_key";
 import { UnkeyApiError, openApiErrorResponses } from "@/pkg/errors";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery } from "@unkey/rbac";
 
 const route = createRoute({
   method: "get",
   path: "/v1/apis/{apiId}",
   request: {
     header: z.object({
-      authorization: z.string().regex(/^Bearer [a-zA-Z0-9_]+/).openapi({
-        description: "A root key to authorize the request formatted as bearer token",
-        example: "Bearer unkey_1234",
-      }),
+      authorization: z
+        .string()
+        .regex(/^Bearer [a-zA-Z0-9_]+/)
+        .openapi({
+          description: "A root key to authorize the request formatted as bearer token",
+          example: "Bearer unkey_1234",
+        }),
     }),
     params: z.object({
       apiId: z.string().min(1).openapi({
@@ -53,14 +56,14 @@ const route = createRoute({
 
 export type Route = typeof route;
 export type LegacyApisGetApiResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 export const registerLegacyApisGetApi = (app: App) =>
   app.openapi(route, async (c) => {
     const apiId = c.req.param("apiId");
     const auth = await rootKeyAuth(
       c,
-      buildQuery(({ or }) => or("*", `api.${apiId}.read_api`)),
+      buildUnkeyQuery(({ or }) => or("*", `api.${apiId}.read_api`)),
     );
 
     const api = await cache.withCache(c, "apiById", apiId, async () => {

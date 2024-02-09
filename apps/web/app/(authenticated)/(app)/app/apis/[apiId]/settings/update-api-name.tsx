@@ -48,11 +48,14 @@ export const UpdateApiName: React.FC<Props> = ({ api }) => {
       router.refresh();
     },
     onError(err) {
-      console.log(err);
+      console.error(err);
       toast.error(err.message);
     },
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (values.name === api.name || !values.name) {
+      return toast.error("Please provide a valid name before saving.");
+    }
     updateName.mutateAsync(values);
   }
 
@@ -70,7 +73,7 @@ export const UpdateApiName: React.FC<Props> = ({ api }) => {
           <div className="flex flex-col space-y-2">
             <input type="hidden" name="workspaceId" value={api.workspaceId} />
             <input type="hidden" name="apiId" value={api.id} />
-            <label className="sr-only hidden">Name</label>
+            <label className="hidden sr-only">Name</label>
             <FormField
               control={form.control}
               name="name"

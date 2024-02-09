@@ -17,6 +17,7 @@ import { Env } from "./env";
 import { KeyService } from "./keys/service";
 import { ConsoleLogger, Logger } from "./logging";
 import { AxiomLogger } from "./logging/axiom";
+import { QueueLogger } from "./logging/queue";
 import { AxiomMetrics, Metrics, NoopMetrics, QueueMetrics } from "./metrics";
 import { DurableRateLimiter, NoopRateLimiter, RateLimiter } from "./ratelimit";
 import { DurableUsageLimiter, NoopUsageLimiter, UsageLimiter } from "./usagelimit";
@@ -24,12 +25,14 @@ import { DurableUsageLimiter, NoopUsageLimiter, UsageLimiter } from "./usagelimi
 export type KeyHash = string;
 export type CacheNamespaces = {
   keyById: {
-    key: Key & { roles?: { role: string }[] };
+    key: Key;
     api: Api;
+    permissions: string[];
   } | null;
   keyByHash: {
-    key: Key & { roles?: { role: string }[] };
+    key: Key;
     api: Api;
+    permissions: string[];
   } | null;
   apiById: Api | null;
   keysByOwnerId: {
@@ -69,13 +72,13 @@ export async function init(opts: { env: Env }): Promise<void> {
   }
 
   metrics = opts.env.METRICS
-    ? new QueueMetrics({ drain: opts.env.METRICS })
+    ? new QueueMetrics({ queue: opts.env.METRICS })
     : opts.env.AXIOM_TOKEN
-    ? new AxiomMetrics({
-        axiomToken: opts.env.AXIOM_TOKEN,
-        environment: opts.env.ENVIRONMENT,
-      })
-    : new NoopMetrics();
+      ? new AxiomMetrics({
+          axiomToken: opts.env.AXIOM_TOKEN,
+          environment: opts.env.ENVIRONMENT,
+        })
+      : new NoopMetrics();
 
   cache = new TieredCache(
     new CacheWithMetrics<CacheNamespaces>({
@@ -103,9 +106,11 @@ export async function init(opts: { env: Env }): Promise<void> {
     username: opts.env.DATABASE_USERNAME,
     password: opts.env.DATABASE_PASSWORD,
   });
-  logger = opts.env.AXIOM_TOKEN
-    ? new AxiomLogger({ axiomToken: opts.env.AXIOM_TOKEN, environment: opts.env.ENVIRONMENT })
-    : new ConsoleLogger();
+  logger = opts.env.LOGS
+    ? new QueueLogger({ queue: opts.env.LOGS })
+    : opts.env.AXIOM_TOKEN
+      ? new AxiomLogger({ axiomToken: opts.env.AXIOM_TOKEN, environment: opts.env.ENVIRONMENT })
+      : new ConsoleLogger();
 
   usageLimiter = opts.env.DO_USAGELIMIT
     ? new DurableUsageLimiter({

@@ -23,6 +23,7 @@ export type UnkeyContext = {
     | "USAGE_EXCEEDED"
     | "UNAUTHORIZED"
     | "DISABLED"
+    | "INSUFFICIENT_PERMISSIONS"
     | undefined;
 };
 
@@ -73,7 +74,8 @@ export function unkey(config?: UnkeyConfig): MiddlewareHandler {
       : c.req.header("Authorization")?.replace("Bearer ", "") ?? null;
     if (!key) {
       return c.json({ error: "unauthorized" }, { status: 401 });
-    } else if (typeof key !== "string") {
+    }
+    if (typeof key !== "string") {
       return key;
     }
 

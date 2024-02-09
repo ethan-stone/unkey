@@ -4,7 +4,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 
 import { rootKeyAuth } from "@/pkg/auth/root_key";
 import { UnkeyApiError, openApiErrorResponses } from "@/pkg/errors";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery, unkeyPermissionValidation } from "@unkey/rbac";
 
 const route = createRoute({
   method: "get",
@@ -71,7 +71,7 @@ const route = createRoute({
 
 export type Route = typeof route;
 export type V1KeysGetVerificationsResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 export const registerV1KeysGetVerifications = (app: App) =>
   app.openapi(route, async (c) => {
@@ -88,6 +88,7 @@ export const registerV1KeysGetVerifications = (app: App) =>
         const dbRes = await db.query.keys.findFirst({
           where: (table, { eq, and, isNull }) => and(eq(table.id, keyId), isNull(table.deletedAt)),
           with: {
+            permissions: { with: { permission: true } },
             keyAuth: {
               with: {
                 api: true,
@@ -102,6 +103,7 @@ export const registerV1KeysGetVerifications = (app: App) =>
         return {
           key: dbRes,
           api: dbRes.keyAuth.api,
+          permissions: dbRes.permissions.map((p) => p.permission.key!).filter(Boolean),
         };
       });
 
@@ -150,8 +152,17 @@ export const registerV1KeysGetVerifications = (app: App) =>
     const apiIds = Array.from(new Set(ids.map(({ apiId }) => apiId)));
     const auth = await rootKeyAuth(
       c,
-      buildQuery(({ or, and }) =>
-        or("*", "api.*.read_key", and(...apiIds.map((apiId) => `api.${apiId}.read_key`))),
+      buildUnkeyQuery(({ or, and }) =>
+        or(
+          "*",
+          "api.*.read_key",
+          and(
+            ...apiIds.map(
+              (apiId) =>
+                `api.${apiId}.read_key` satisfies z.infer<typeof unkeyPermissionValidation>,
+            ),
+          ),
+        ),
       ),
     );
     const authorizedWorkspaceId = auth.authorizedWorkspaceId;

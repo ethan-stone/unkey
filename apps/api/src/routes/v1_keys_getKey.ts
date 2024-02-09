@@ -4,7 +4,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 
 import { rootKeyAuth } from "@/pkg/auth/root_key";
 import { UnkeyApiError, openApiErrorResponses } from "@/pkg/errors";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery } from "@unkey/rbac";
 import { keySchema } from "./schema";
 
 const route = createRoute({
@@ -34,7 +34,7 @@ const route = createRoute({
 
 export type Route = typeof route;
 export type V1KeysGetKeyResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 export const registerV1KeysGetKey = (app: App) =>
   app.openapi(route, async (c) => {
@@ -44,13 +44,11 @@ export const registerV1KeysGetKey = (app: App) =>
       const dbRes = await db.query.keys.findFirst({
         where: (table, { eq, and, isNull }) => and(eq(table.id, keyId), isNull(table.deletedAt)),
         with: {
+          permissions: { with: { permission: true } },
           keyAuth: {
             with: {
               api: true,
             },
-          },
-          roles: {
-            columns: { role: true },
           },
         },
       });
@@ -60,6 +58,7 @@ export const registerV1KeysGetKey = (app: App) =>
       return {
         key: dbRes,
         api: dbRes.keyAuth.api,
+        permissions: dbRes.permissions.map((p) => p.permission.key!).filter(Boolean),
       };
     });
 
@@ -71,7 +70,7 @@ export const registerV1KeysGetKey = (app: App) =>
     }
     const auth = await rootKeyAuth(
       c,
-      buildQuery(({ or }) => or("*", "api.*.read_key", `api.${data.api.id}.read_key`)),
+      buildUnkeyQuery(({ or }) => or("*", "api.*.read_key", `api.${data.api.id}.read_key`)),
     );
 
     if (data.key.workspaceId !== auth.authorizedWorkspaceId) {
@@ -115,7 +114,8 @@ export const registerV1KeysGetKey = (app: App) =>
               refillInterval: data.key.ratelimitRefillInterval,
             }
           : undefined,
-      roles: data.key.roles?.map((r) => r.role) ?? undefined,
+      roles: [],
+      // roles:  data.key.roles?.map((r) => r.role) ?? undefined,
       enabled: data.key.enabled,
     });
   });

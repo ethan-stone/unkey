@@ -1,4 +1,4 @@
-import { db, usageLimiter } from "@/pkg/global";
+import { cache, db, usageLimiter } from "@/pkg/global";
 import { App } from "@/pkg/hono/app";
 import { createRoute, z } from "@hono/zod-openapi";
 
@@ -6,7 +6,7 @@ import { rootKeyAuth } from "@/pkg/auth/root_key";
 import { UnkeyApiError, openApiErrorResponses } from "@/pkg/errors";
 import { schema } from "@unkey/db";
 import { newId } from "@unkey/id";
-import { buildQuery } from "@unkey/rbac";
+import { buildUnkeyQuery } from "@unkey/rbac";
 import { eq } from "drizzle-orm";
 
 const route = createRoute({
@@ -131,61 +131,63 @@ const route = createRoute({
 
 export type Route = typeof route;
 export type V1KeysUpdateKeyRequest = z.infer<
-  typeof route.request.body.content["application/json"]["schema"]
+  (typeof route.request.body.content)["application/json"]["schema"]
 >;
 export type V1KeysUpdateKeyResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 
 export const registerV1KeysUpdate = (app: App) =>
   app.openapi(route, async (c) => {
     const req = c.req.valid("json");
 
-    const key = await db.query.keys.findFirst({
-      where: (table, { eq }) => eq(table.id, req.keyId),
-      with: {
-        keyAuth: {
-          with: {
-            api: true,
+    await db.transaction(async (tx) => {
+      const key = await tx.query.keys.findFirst({
+        where: (table, { eq }) => eq(table.id, req.keyId),
+        with: {
+          keyAuth: {
+            with: {
+              api: true,
+            },
           },
         },
-      },
-    });
-
-    if (!key) {
-      throw new UnkeyApiError({
-        code: "NOT_FOUND",
-        message: `key ${req.keyId} not found`,
       });
-    }
-    const auth = await rootKeyAuth(
-      c,
-      buildQuery(({ or }) => or("*", "api.*.update_key", `api.${key.keyAuth.api.id}.update_key`)),
-    );
-    if (key.workspaceId !== auth.authorizedWorkspaceId) {
-      throw new UnkeyApiError({
-        code: "NOT_FOUND",
-        message: `key ${req.keyId} not found`,
-      });
-    }
 
-    if (req.remaining === null && req.refill) {
-      throw new UnkeyApiError({
-        code: "BAD_REQUEST",
-        message: "Cannot set refill on a key with unlimited requests",
-      });
-    }
-    if (req.refill && key.remaining === null) {
-      throw new UnkeyApiError({
-        code: "BAD_REQUEST",
-        message: "Cannot set refill on a key with unlimited requests",
-      });
-    }
+      if (!key) {
+        throw new UnkeyApiError({
+          code: "NOT_FOUND",
+          message: `key ${req.keyId} not found`,
+        });
+      }
+      const auth = await rootKeyAuth(
+        c,
+        buildUnkeyQuery(({ or }) =>
+          or("*", "api.*.update_key", `api.${key.keyAuth.api.id}.update_key`),
+        ),
+      );
+      if (key.workspaceId !== auth.authorizedWorkspaceId) {
+        throw new UnkeyApiError({
+          code: "NOT_FOUND",
+          message: `key ${req.keyId} not found`,
+        });
+      }
 
-    const authorizedWorkspaceId = auth.authorizedWorkspaceId;
-    const rootKeyId = auth.key.id;
+      if (req.remaining === null && req.refill) {
+        throw new UnkeyApiError({
+          code: "BAD_REQUEST",
+          message: "Cannot set refill on a key with unlimited requests",
+        });
+      }
+      if (req.refill && key.remaining === null) {
+        throw new UnkeyApiError({
+          code: "BAD_REQUEST",
+          message: "Cannot set refill on a key with unlimited requests",
+        });
+      }
 
-    await db.transaction(async (tx) => {
+      const authorizedWorkspaceId = auth.authorizedWorkspaceId;
+      const rootKeyId = auth.key.id;
+
       await tx
         .update(schema.keys)
         .set({
@@ -196,8 +198,8 @@ export const registerV1KeysUpdate = (app: App) =>
             typeof req.expires === "undefined"
               ? undefined
               : req.expires === null
-              ? null
-              : new Date(req.expires),
+                ? null
+                : new Date(req.expires),
           remaining: req.remaining,
           ratelimitType: req.ratelimit === null ? null : req.ratelimit?.type,
           ratelimitLimit: req.ratelimit === null ? null : req.ratelimit?.limit,
@@ -218,11 +220,16 @@ export const registerV1KeysUpdate = (app: App) =>
         actorId: rootKeyId,
         event: "key.update",
         description: "Key was updated",
+        keyId: key.id,
         keyAuthId: key.keyAuthId,
       });
-    });
 
-    await usageLimiter.revalidate({ keyId: key.id });
+      await Promise.all([
+        usageLimiter.revalidate({ keyId: key.id }),
+        cache.remove(c, "keyByHash", key.hash),
+        cache.remove(c, "keyById", key.id),
+      ]);
+    });
 
     return c.json({});
   });

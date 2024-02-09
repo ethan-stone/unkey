@@ -26,17 +26,34 @@ async function main() {
     console.log(++i, "/", oldRoles.length, oldRole.id);
 
     await db.transaction(async (tx) => {
-      const permissionId = newId("permission");
-      await tx.insert(schema.permissions).values({
-        id: permissionId,
-        name: oldRole.role,
-        workspaceId: oldRole.workspaceId,
+      const existingPermission = await tx.query.permissions.findFirst({
+        where: (table, { eq, and }) =>
+          and(eq(table.workspaceId, oldRole.workspaceId), eq(table.name, oldRole.role)),
       });
-      await tx.insert(schema.keysPermissions).values({
-        keyId: oldRole.key.id,
-        permissionId,
-        workspaceId: oldRole.workspaceId,
-      });
+
+      let permissionId: string = newId("permission");
+      if (existingPermission) {
+        permissionId = existingPermission.id;
+      } else {
+        await tx.insert(schema.permissions).values({
+          id: permissionId,
+          name: oldRole.role,
+          workspaceId: oldRole.workspaceId,
+        });
+      }
+
+      await tx
+        .insert(schema.keysPermissions)
+        .values({
+          keyId: oldRole.key.id,
+          permissionId,
+          workspaceId: oldRole.workspaceId,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            permissionId,
+          },
+        });
     });
   }
 }

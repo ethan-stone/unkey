@@ -111,6 +111,7 @@ A key could be invalid for a number of reasons, for example if it has expired, h
                   "RATE_LIMITED",
                   "UNAUTHORIZED",
                   "DISABLED",
+                  "INSUFFICIENT_PERMISSIONS",
                 ])
                 .optional()
                 .openapi({
@@ -121,7 +122,9 @@ Possible values are:
 - USAGE_EXCEEDED: the key has exceeded its request limit
 - RATE_LIMITED: the key has been ratelimited
 - UNAUTHORIZED: the key is not authorized
-- DISABLED: the key is disabled`,
+- DISABLED: the key is disabled
+- INSUFFICIENT_PERMISSIONS: you do not have the required permissions to perform this action
+`,
                 }),
               enabled: z.boolean().optional().openapi({
                 description:
@@ -137,10 +140,10 @@ Possible values are:
 });
 
 export type V1KeysVerifyKeyRequest = z.infer<
-  typeof route.request.body.content["application/json"]["schema"]
+  (typeof route.request.body.content)["application/json"]["schema"]
 >;
 export type V1KeysVerifyKeyResponse = z.infer<
-  typeof route.responses[200]["content"]["application/json"]["schema"]
+  (typeof route.responses)[200]["content"]["application/json"]["schema"]
 >;
 
 export const registerV1KeysVerifyKey = (app: App) =>

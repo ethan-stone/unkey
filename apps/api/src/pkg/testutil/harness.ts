@@ -85,18 +85,11 @@ export class Harness {
       createdAt: new Date(),
     });
     if (roles && roles.length > 0) {
-      await this.db.insert(schema.roles).values(
-        roles.map((role) => ({
-          id: newId("role"),
-          workspaceId: this.resources.unkeyWorkspace.id,
-          keyId,
-          role,
-        })),
-      );
-
       const permissions = roles.map((name) => ({
         id: newId("permission"),
         name,
+        key: name,
+        description: null,
         workspaceId: this.resources.unkeyWorkspace.id,
       }));
 
@@ -143,6 +136,7 @@ async function seed(env: {
     planChanged: null,
     createdAt: new Date(),
     deletedAt: null,
+    planDowngradeRequest: null,
   };
   const userWorkspace: Workspace = {
     id: newId("workspace"),
@@ -159,6 +153,7 @@ async function seed(env: {
     planChanged: null,
     createdAt: new Date(),
     deletedAt: null,
+    planDowngradeRequest: null,
   };
 
   const unkeyKeyAuth: KeyAuth = {
