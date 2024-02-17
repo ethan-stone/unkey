@@ -1,9 +1,12 @@
-import { BlogHero } from "@/components/blog-hero";
-import { BlogGrid } from "@/components/blogs-grid";
-import { Container } from "@/components/container";
+import { CTA } from "@/components/cta";
+import { TopLeftShiningLight, TopRightShiningLight } from "@/components/svg/background-shiny";
+import { BlogBackgroundLines } from "@/components/svg/blog-page";
 import { authors } from "@/content/blog/authors";
-import { BLOG_PATH, Frontmatter, getAllMDXData } from "@/lib/mdx-helper";
+import { BLOG_PATH, Frontmatter, Tags, getAllMDXData } from "@/lib/mdx-helper";
 import Link from "next/link";
+import { BlogContainer } from "./blog-container";
+import { BlogHero } from "./blog-hero";
+import { BlogGrid } from "./blogs-grid";
 
 export const metadata = {
   title: "Blog | Unkey",
@@ -42,7 +45,15 @@ function getAllTags(posts: { frontmatter: Frontmatter; slug: string }[]) {
   });
   return tempTags;
 }
-export default async function Blog() {
+
+type Props = {
+  searchParams?: {
+    tag?: Tags;
+    page?: number;
+  };
+};
+
+export default async function Blog(props: Props) {
   const posts = (await getAllMDXData({ contentPath: BLOG_PATH })).sort((a, b) => {
     return new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime();
   });
@@ -50,7 +61,10 @@ export default async function Blog() {
   const postTags: string[] = posts[0].frontmatter.tags?.toString().split(" ") || [];
   return (
     <>
-      <Container className="scroll-smooth mt-20">
+      <BlogContainer className="max-w-full mt-32 scroll-smooth">
+        <TopLeftShiningLight />
+        <BlogBackgroundLines />
+        <TopRightShiningLight />
         <Link href={`/blog/${posts[0].slug}`} key={posts[0].slug}>
           <BlogHero
             tags={postTags}
@@ -61,8 +75,9 @@ export default async function Blog() {
             publishDate={posts[0].frontmatter.date}
           />
         </Link>
-        <BlogGrid posts={posts} />
-      </Container>
+        <BlogGrid posts={posts} searchParams={props.searchParams} />
+        <CTA />
+      </BlogContainer>
     </>
   );
 }
